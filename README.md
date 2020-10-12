@@ -1,2 +1,78 @@
 # General-Social-Survey
 This project deals with the analysis of the General Social Survey dataset using R programming. 
+
+
+---
+title: "GSS"
+output:
+  pdf_document: default
+  html_document: default
+  word_document: default
+date: "October 4th 2020"
+theme: cerulean
+---
+## This project deals with the analysis of the General Social Survey dataset. 
+
+```{r}
+## Working with gss_cat with forcats which is a dataset in r. 
+library(tidyverse)
+library(forcats)
+gss_cat
+```
+
+```{r}
+### Counting by race.
+gss_cat%>% count(race)
+### Creating a bargraph for the count by race.
+ggplot(gss_cat,aes(race)) + geom_bar()
+```
+
+```{r}
+### Grouping by religion to compute the mean age and number of hours spent on watching tv.
+religion.summary<- gss_cat %>% group_by(relig) %>% summarise(age=mean(age, na.rm = TRUE), tvhours=mean(tvhours, na.rm = TRUE), n=n())
+religion.summary
+
+### Making a plot with the above data.
+ggplot(religion.summary, aes(tvhours, relig)) + geom_point()
+```
+
+```{r}
+### Reordering the religion by the number of tv hours.
+religion.summary %>% mutate(relig=fct_reorder(relig, tvhours)) %>% ggplot(aes(tvhours, relig)) + geom_point()
+```
+
+```{r}
+### Reordering the levels as a factor.
+levels(gss_cat$rincome)
+levels(gss_cat$marital)
+levels(gss_cat$race)
+```
+
+```{r}
+### Reordering for a particular feedback to appear first.
+levels(fct_relevel(gss_cat$rincome, "Not applicable"))
+```
+
+```{r}
+### Other reordering.
+marital.by.age<- gss_cat %>% filter(!is.na(age)) %>% count(age, marital) %>% group_by(age) %>% mutate(prop= n / sum(n))
+marital.by.age
+### Creating a plot with the above line.
+ggplot(marital.by.age,aes(age, prop, colour=marital)) + geom_line(na.rm = TRUE)
+```
+
+```{r}
+### Reordering levels by frequency with fct_infreq().
+gss_cat %>% mutate(marital=marital %>% fct_infreq() %>% fct_rev()) %>% ggplot(aes(marital)) + geom_bar()
+```
+
+```{r}
+### Collasping levels with fct_collapse().
+gss_cat %>% mutate(partyid=fct_collapse(partyid, Rep = c("Strong republican", "Not str republican"), Dem = c("Strong democrat", "Not str democrat"), Ind = c("Ind,near rep", "Independent", "Ind,near dem"), Other = c("No answer", "Don't know", "Other party"))) %>% count(partyid)
+```
+
+```{r}
+### Lumping groups (combine other smaller groups) together with fct_lump.
+### By retaining 5 groups in 'religion'.
+gss_cat %>% mutate(relig= fct_lump(relig, n=5)) %>% count(relig, sort = TRUE)
+```
